@@ -1,0 +1,8 @@
+var name = "Aix"
+const content = '.'
+
+fun hello(name,content) {
+    out "Hello " + name + content
+}
+
+hello(name,content)
