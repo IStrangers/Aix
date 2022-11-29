@@ -34,18 +34,18 @@ func (self *Position) String() string {
 
 type SourceFile struct {
 	mutexLock         sync.Mutex
-	index             Index
+	baseOffset        int
 	name              string
 	content           string
 	lineOffsets       []int
 	lastScannedOffset int
 }
 
-func NewSourceFile(fileName, content string, index Index) *SourceFile {
+func NewSourceFile(fileName, content string, baseOffset int) *SourceFile {
 	return &SourceFile{
-		index:   index,
-		content: content,
-		name:    fileName,
+		baseOffset: baseOffset,
+		content:    content,
+		name:       fileName,
 	}
 }
 
@@ -122,21 +122,35 @@ type SourceFileSet struct {
 	last  *SourceFile
 }
 
-func (self *SourceFileSet) nextIndex() Index {
+func (self *SourceFileSet) nextBaseOffset() int {
 	if self.last == nil {
-		return 0
+		return 1
 	}
-	return self.last.index + 1
+	return self.last.baseOffset + len(self.last.content) + 1
 }
 
-func (self *SourceFileSet) Add(fileName, content string) Index {
-	index := self.nextIndex()
-	sourceFile := NewSourceFile(fileName, content, index)
+func (self *SourceFileSet) Add(fileName, content string) int {
+	baseOffset := self.nextBaseOffset()
+	sourceFile := NewSourceFile(fileName, content, baseOffset)
 	self.files = append(self.files, sourceFile)
 	self.last = sourceFile
-	return index
+	return baseOffset
 }
 
 func (self *SourceFileSet) get(index Index) *SourceFile {
-	return self.files[index]
+	for _, file := range self.files {
+		if index <= Index(file.baseOffset+len(file.content)) {
+			return file
+		}
+	}
+	return nil
+}
+
+func (self *SourceFileSet) Position(index Index) Position {
+	for _, file := range self.files {
+		if index <= Index(file.baseOffset+len(file.content)) {
+			return file.Position(int(index) - file.baseOffset)
+		}
+	}
+	return Position{}
 }
