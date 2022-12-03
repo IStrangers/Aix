@@ -12,60 +12,70 @@ import (
 )
 
 type parser struct {
-	script string
-	baseOffset int
+	script       string
+	scriptLength int
+	baseOffset   int
 
-	chr rune
+	chr       rune
 	chrOffset int
-	offset int
+	offset    int
 
-	index file.Index
-	token token.Token
-	literal string
+	index         file.Index
+	token         token.Token
+	literal       string
 	parsedLiteral unistring.UniString
+
+	scope *scope
 
 	errorList ErrorList
 
 	file *file.SourceFile
 }
 
+func NewParser(fileName, script string, baseOffset int) *parser {
+	parser := &parser{
+		chr:          ' ',
+		script:       script,
+		scriptLength: len(script),
+		baseOffset:   baseOffset,
+		file:         file.NewSourceFile(fileName, script, baseOffset),
+	}
+	return parser
+}
+
 func ParseFileByPath(path string) *ast.Program {
-	script, _ := os.ReadFile(path)
-	return ParseScript(string(script))
+	file, _ := os.Open(path)
+	return ParseFile(file)
 }
 
 func ParseFile(file fs.File) *ast.Program {
 	defer file.Close()
-	var script []byte
-	buf := make([]byte, 1024)
-	for {
-		n, err := file.Read(buf)
-		if err != nil && err != io.EOF {
-			fmt.Println("read buf fail", err)
-			break
-		}
-		if n == 0 {
-			break
-		}
-		script = append(script, buf[:n]...)
+	fileInfo, _ := file.Stat()
+	script := make([]byte, fileInfo.Size())
+	_, err := file.Read(script)
+	if err != nil && err != io.EOF {
+		fmt.Println("read buf fail", err)
 	}
-	return ParseScript(string(script))
+	return ParseScript(fileInfo.Name(), string(script))
 }
 
-func ParseScript(script string) *ast.Program {
-
+func ParseScript(fileName, script string) *ast.Program {
+	parser := NewParser(fileName, script, 1)
+	return parser.parseProgram()
 }
 
 func (self parser) parse() (*ast.Program, error) {
 	program := self.parseProgram()
-	return program,self.errorList.PeekErr()
+	return program, self.errorList.PeekErr()
 }
 
 func (self parser) parseProgram() *ast.Program {
+	defer self.closeScope()
+	self.openScope()
 	program := &ast.Program{
-		Body: self.parseStatementList(),
-		DeclarationList: ,
-		File: self.file,
+		Body:            self.parseStatementList(),
+		DeclarationList: self.scope.declarationList,
+		File:            self.file,
 	}
 	return program
 }
