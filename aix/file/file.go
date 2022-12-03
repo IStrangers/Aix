@@ -36,15 +36,15 @@ type SourceFile struct {
 	mutexLock         sync.Mutex
 	baseOffset        int
 	name              string
-	content           string
+	script            string
 	lineOffsets       []int
 	lastScannedOffset int
 }
 
-func NewSourceFile(fileName, content string, baseOffset int) *SourceFile {
+func NewSourceFile(fileName, script string, baseOffset int) *SourceFile {
 	return &SourceFile{
 		baseOffset: baseOffset,
-		content:    content,
+		script:     script,
 		name:       fileName,
 	}
 }
@@ -100,9 +100,9 @@ func findNextLineStart(s string) int {
 func (self *SourceFile) scanLine(offset int) int {
 	o := self.lastScannedOffset
 	for o < offset {
-		p := findNextLineStart(self.content[o:])
+		p := findNextLineStart(self.script[o:])
 		if p == -1 {
-			self.lastScannedOffset = len(self.content)
+			self.lastScannedOffset = len(self.script)
 			return len(self.lineOffsets) - 1
 		}
 		o = o + p
@@ -126,7 +126,7 @@ func (self *SourceFileSet) nextBaseOffset() int {
 	if self.last == nil {
 		return 1
 	}
-	return self.last.baseOffset + len(self.last.content) + 1
+	return self.last.baseOffset + len(self.last.script) + 1
 }
 
 func (self *SourceFileSet) Add(fileName, content string) int {
@@ -139,7 +139,7 @@ func (self *SourceFileSet) Add(fileName, content string) int {
 
 func (self *SourceFileSet) get(index Index) *SourceFile {
 	for _, file := range self.files {
-		if index <= Index(file.baseOffset+len(file.content)) {
+		if index <= Index(file.baseOffset+len(file.script)) {
 			return file
 		}
 	}
@@ -148,7 +148,7 @@ func (self *SourceFileSet) get(index Index) *SourceFile {
 
 func (self *SourceFileSet) Position(index Index) Position {
 	for _, file := range self.files {
-		if index <= Index(file.baseOffset+len(file.content)) {
+		if index <= Index(file.baseOffset+len(file.script)) {
 			return file.Position(int(index) - file.baseOffset)
 		}
 	}

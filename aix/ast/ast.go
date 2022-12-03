@@ -38,6 +38,12 @@ type (
 		Node
 		statementNode()
 	}
+
+	Program struct {
+		Body            []Statement
+		DeclarationList []*VariableDeclaration
+		File            *file.SourceFile
+	}
 )
 
 // Expression
