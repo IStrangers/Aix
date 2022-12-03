@@ -32,27 +32,26 @@ type parser struct {
 	file *file.SourceFile
 }
 
-func NewParser(fileName, script string, baseOffset int) *parser {
-	parser := &parser{
+func newParser(fileName, script string, baseOffset int) *parser {
+	return &parser{
 		chr:          ' ',
 		script:       script,
 		scriptLength: len(script),
 		baseOffset:   baseOffset,
 		file:         file.NewSourceFile(fileName, script, baseOffset),
 	}
-	return parser
 }
 
 func ParseFileByPath(path string) *ast.Program {
-	file, _ := os.Open(path)
-	return ParseFile(file)
+	fsFile, _ := os.Open(path)
+	return ParseFile(fsFile)
 }
 
-func ParseFile(file fs.File) *ast.Program {
-	defer file.Close()
-	fileInfo, _ := file.Stat()
+func ParseFile(fsFile fs.File) *ast.Program {
+	defer fsFile.Close()
+	fileInfo, _ := fsFile.Stat()
 	script := make([]byte, fileInfo.Size())
-	_, err := file.Read(script)
+	_, err := fsFile.Read(script)
 	if err != nil && err != io.EOF {
 		fmt.Println("read buf fail", err)
 	}
@@ -60,7 +59,7 @@ func ParseFile(file fs.File) *ast.Program {
 }
 
 func ParseScript(fileName, script string) *ast.Program {
-	parser := NewParser(fileName, script, 1)
+	parser := newParser(fileName, script, 1)
 	return parser.parseProgram()
 }
 
@@ -73,7 +72,7 @@ func (self parser) parseProgram() *ast.Program {
 	defer self.closeScope()
 	self.openScope()
 	program := &ast.Program{
-		Body:            self.parseStatementList(),
+		Body:            self.parseScriptStatementList(),
 		DeclarationList: self.scope.declarationList,
 		File:            self.file,
 	}

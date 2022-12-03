@@ -5,9 +5,21 @@ import (
 	"aix/token"
 )
 
-func (self parser) parseStatementList() []ast.Statement {
+func (self parser) parseScriptStatementList() []ast.Statement {
+	return self.parseStatementList(func(tkn token.Token) bool {
+		return tkn != token.EOF
+	})
+}
+
+func (self parser) parseBlockStatementList() []ast.Statement {
+	return self.parseStatementList(func(tkn token.Token) bool {
+		return tkn != token.RIGHT_BRACE && tkn != token.EOF
+	})
+}
+
+func (self parser) parseStatementList(endCondition func(token.Token) bool) []ast.Statement {
 	var statementList []ast.Statement
-	for self.token != token.EOF {
+	for endCondition(self.token) {
 		statementList = append(statementList, self.parseStatement())
 	}
 	return statementList
