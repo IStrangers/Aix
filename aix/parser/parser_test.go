@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"aix/ast"
 	"reflect"
 	"testing"
 )
@@ -13,9 +12,15 @@ func TestParseFileByPath(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *ast.Program
+		want any
 	}{
-		// TODO: Add test cases.
+		{
+			name: "HelloAix",
+			args: args{
+				path: "../../example/HelloAix.aix",
+			},
+			want: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
