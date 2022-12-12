@@ -26,5 +26,31 @@ func (self parser) parseStatementList(endCondition func(token.Token) bool) []ast
 }
 
 func (self parser) parseStatement() ast.Statement {
-	return nil
+	if self.token == token.EOF {
+		return &ast.BadStatement{
+			Start: self.index,
+			End:   self.index + 1,
+		}
+	}
+
+	switch self.token {
+	case token.VAR:
+		return self.parseVariableStatement()
+	case token.CONST:
+		return self.parseLexicalDeclaration()
+	}
+
+	expression := self.parseExpression()
+
+	return &ast.ExpressionStatement{
+		Expression: expression,
+	}
+}
+
+func (self parser) parseVariableStatement() ast.Statement {
+
+}
+
+func (self parser) parseLexicalDeclaration() ast.Statement {
+
 }

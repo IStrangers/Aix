@@ -9,9 +9,9 @@ import (
 type (
 	Node interface {
 		//节点在解析文本的开始索引
-		StartIndex()
+		StartIndex() file.Index
 		//节点在解析文本的结束索引
-		EndIndex()
+		EndIndex() file.Index
 	}
 
 	Expression interface {
@@ -51,6 +51,10 @@ type (
 	BadExpression struct {
 		Start file.Index
 		End   file.Index
+	}
+
+	ExpressionStatement struct {
+		Expression
 	}
 
 	AssignExpression struct {
@@ -138,6 +142,16 @@ type (
 		Static bool
 	}
 )
+
+func (self BadStatement) StartIndex() file.Index {
+	return self.Start
+}
+func (self BadStatement) EndIndex() file.Index {
+	return self.End
+}
+
+func (self BadStatement) statementNode()     {}
+func (e ExpressionStatement) statementNode() {}
 
 func (*BadExpression) bindingTarget() {}
 func (*Identifier) bindingTarget()    {}
