@@ -97,7 +97,7 @@ type (
 
 	VariableStatement struct {
 		Var         file.Index
-		BindingList []Binding
+		BindingList []*Binding
 	}
 
 	BlockStatement struct {
@@ -116,7 +116,7 @@ type (
 type (
 	VariableDeclaration struct {
 		Var         file.Index
-		BindingList []Binding
+		BindingList []*Binding
 	}
 
 	ClassDefinition struct {
@@ -143,15 +143,19 @@ type (
 	}
 )
 
-func (self BadStatement) StartIndex() file.Index {
-	return self.Start
-}
-func (self BadStatement) EndIndex() file.Index {
-	return self.End
+func (self BadStatement) StartIndex() file.Index      { return self.Start }
+func (self Binding) StartIndex() file.Index           { return self.Target.StartIndex() }
+func (self VariableStatement) StartIndex() file.Index { return self.Var }
+
+func (self BadStatement) EndIndex() file.Index { return self.End }
+func (self Binding) EndIndex() file.Index      { return self.Target.EndIndex() }
+func (self VariableStatement) EndIndex() file.Index {
+	return self.BindingList[len(self.BindingList)-1].EndIndex()
 }
 
-func (self BadStatement) statementNode()     {}
-func (e ExpressionStatement) statementNode() {}
+func (self BadStatement) statementNode()        {}
+func (self ExpressionStatement) statementNode() {}
+func (self VariableStatement) statementNode()   {}
 
 func (*BadExpression) bindingTarget() {}
 func (*Identifier) bindingTarget()    {}

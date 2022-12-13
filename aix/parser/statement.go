@@ -48,7 +48,13 @@ func (self parser) parseStatement() ast.Statement {
 }
 
 func (self parser) parseVariableStatement() ast.Statement {
+	index := self.expect(token.VAR)
+	list := self.parseVarDeclarationList()
 
+	return &ast.VariableStatement{
+		Var:         index,
+		BindingList: list,
+	}
 }
 
 func (self parser) parseLexicalDeclaration() ast.Statement {

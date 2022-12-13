@@ -2,6 +2,7 @@ package parser
 
 import (
 	"aix/file"
+	"aix/token"
 	"fmt"
 )
 
@@ -40,4 +41,8 @@ func (self ErrorList) PeekErr() error {
 		return nil
 	}
 	return self
+}
+
+func (self parser) errorUnexpectedToken(tkn token.Token) {
+
 }

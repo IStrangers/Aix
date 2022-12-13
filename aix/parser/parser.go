@@ -78,3 +78,16 @@ func (self parser) parseProgram() *ast.Program {
 	}
 	return program
 }
+
+func (self parser) expect(tkn token.Token) file.Index {
+	index := self.index
+	if self.token != tkn {
+		self.errorUnexpectedToken(self.token)
+	}
+	self.next()
+	return index
+}
+
+func (self parser) next() {
+	self.token, self.literal, self.parsedLiteral, self.index = self.scan()
+}
