@@ -43,6 +43,34 @@ func (self ErrorList) PeekErr() error {
 	return self
 }
 
-func (self parser) errorUnexpectedToken(tkn token.Token) {
+func (self *ErrorList) Add(position file.Position, msg string) {
+	*self = append(*self, &Error{position, msg})
+}
 
+func (self parser) error(place file.Index, msg string, msgValues ...any) *Error {
+	position := self.position(place)
+	msg = fmt.Sprintf(msg, msgValues...)
+	self.errorList.Add(position, msg)
+	return self.errorList[len(self.errorList)-1]
+}
+
+func (self parser) errorUnexpectedToken(tkn token.Token) *Error {
+	switch tkn {
+	case token.EOF:
+		return self.error(file.Index(0), "Unexpected end of input")
+	}
+	value := tkn.String()
+	switch tkn {
+	case token.BOOLEAN, token.NULL:
+		value = self.literal
+	case token.IDENTIFIER:
+		return self.error(self.index, "Unexpected identifier")
+	case token.KEYWORD:
+		return self.error(self.index, "Unexpected reserved word")
+	case token.NUMBER:
+		return self.error(self.index, "Unexpected number")
+	case token.STRING:
+		return self.error(self.index, "Unexpected string")
+	}
+	return self.error(self.index, "Unexpected token %v", value)
 }

@@ -88,6 +88,10 @@ func (self parser) expect(tkn token.Token) file.Index {
 	return index
 }
 
+func (self parser) position(index file.Index) file.Position {
+	return self.file.Position(int(index) - self.baseOffset)
+}
+
 func (self parser) next() {
 	self.token, self.literal, self.parsedLiteral, self.index = self.scan()
 }
