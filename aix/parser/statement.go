@@ -37,7 +37,7 @@ func (self parser) parseStatement() ast.Statement {
 	case token.VAR:
 		return self.parseVariableStatement()
 	case token.CONST:
-		return self.parseLexicalDeclaration()
+		return self.parseLexicalDeclaration(token.CONST)
 	}
 
 	expression := self.parseExpression()
@@ -57,6 +57,69 @@ func (self parser) parseVariableStatement() ast.Statement {
 	}
 }
 
-func (self parser) parseLexicalDeclaration() ast.Statement {
+func (self parser) parseLexicalDeclaration(tkn token.Token) *ast.LexicalDeclaration {
+	index := self.expect(tkn)
+	list := self.parseVariableDeclarationList()
+
+	return &ast.LexicalDeclaration{
+		Index:       index,
+		Token:       tkn,
+		BindingList: list,
+	}
+}
+
+func (self parser) parseVariableDeclarationList() (declarationList []*ast.Binding) {
+	for {
+		self.parseVariableDeclaration(&declarationList)
+		if self.token != token.COMMA {
+			break
+		}
+		self.next()
+	}
+	return
+}
+
+func (self parser) parseVariableDeclaration(declarationList *[]*ast.Binding) ast.Expression {
+	node := &ast.Binding{
+		Target: self.parseBindingTarget(),
+	}
+
+	if declarationList != nil {
+		*declarationList = append(*declarationList, node)
+	}
+
+	if self.token == token.ASSIGN {
+		self.next()
+		node.Initializer = self.parseAssignmentExpression()
+	}
+
+	return node
+}
+
+func (self parser) parseBindingTarget() (target ast.BindingTarget) {
+	self.tokenToBindingId()
+	switch self.token {
+	case token.IDENTIFIER:
+		target = &ast.Identifier{
+			Index: self.index,
+			Name:  self.parsedLiteral,
+		}
+		self.next()
+	case token.LEFT_BRACKET:
+		target = self.parseArrayBindingPattern()
+	case token.LEFT_BRACE:
+		target = self.parseObjectBindingPattern()
+	default:
+		intex := self.expect(token.IDENTIFIER)
+		self.nextStatement()
+		target = &ast.BadExpression{
+			Start: intex,
+			End:   self.index,
+		}
+	}
+	return
+}
+
+func (self parser) parseAssignmentExpression() ast.Expression {
 
 }

@@ -100,6 +100,12 @@ type (
 		BindingList []*Binding
 	}
 
+	LexicalDeclaration struct {
+		Index       file.Index
+		Token       token.Token
+		BindingList []*Binding
+	}
+
 	BlockStatement struct {
 		LeftBrace     file.Index
 		StatementList []Statement
@@ -143,19 +149,33 @@ type (
 	}
 )
 
-func (self BadStatement) StartIndex() file.Index      { return self.Start }
-func (self Binding) StartIndex() file.Index           { return self.Target.StartIndex() }
-func (self VariableStatement) StartIndex() file.Index { return self.Var }
+func (self BadStatement) statementNode()        {}
+func (self ExpressionStatement) statementNode() {}
+func (self VariableStatement) statementNode()   {}
+func (self LexicalDeclaration) statementNode()  {}
+func (self Binding) expressionNode()            {}
+func (self *Identifier) expressionNode()        {}
+func (self BadExpression) expressionNode()      {}
+
+func (self BadStatement) StartIndex() file.Index       { return self.Start }
+func (self Binding) StartIndex() file.Index            { return self.Target.StartIndex() }
+func (self VariableStatement) StartIndex() file.Index  { return self.Var }
+func (self LexicalDeclaration) StartIndex() file.Index { return self.Index }
+func (self *Identifier) StartIndex() file.Index        { return self.Index }
+func (self *BadExpression) StartIndex() file.Index     { return self.Start }
 
 func (self BadStatement) EndIndex() file.Index { return self.End }
 func (self Binding) EndIndex() file.Index      { return self.Target.EndIndex() }
 func (self VariableStatement) EndIndex() file.Index {
 	return self.BindingList[len(self.BindingList)-1].EndIndex()
 }
-
-func (self BadStatement) statementNode()        {}
-func (self ExpressionStatement) statementNode() {}
-func (self VariableStatement) statementNode()   {}
+func (self LexicalDeclaration) EndIndex() file.Index {
+	return self.BindingList[len(self.BindingList)-1].EndIndex()
+}
+func (self *Identifier) EndIndex() file.Index {
+	return file.Index(int(self.Index) + len(self.Name))
+}
+func (self *BadExpression) EndIndex() file.Index { return self.End }
 
 func (*BadExpression) bindingTarget() {}
 func (*Identifier) bindingTarget()    {}
