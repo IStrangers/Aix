@@ -16,14 +16,14 @@ const (
 	IDENTIFIER
 	KEYWORD
 
-	literal_beg
+	//literal_beg
 	STRING
 	NUMBER
 	BOOLEAN
 	NULL
-	literal_end
+	//literal_end
 
-	operator_beg
+	//operator_beg
 	PLUS      // +
 	MINUS     // -
 	MULTIPLY  // *
@@ -88,9 +88,9 @@ const (
 	ARROW             // =>
 	ELLIPSIS          // ...
 	BACKTICK          // `
-	operator_end
+	//operator_end
 
-	keyword_beg
+	//keyword_beg
 	IF
 	IN
 	OF
@@ -118,7 +118,7 @@ const (
 	CONTINUE
 	INSTANCEOF
 	STATIC
-	keyword_end
+	//keyword_end
 )
 
 var token2string = [...]string{

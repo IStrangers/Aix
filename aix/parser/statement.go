@@ -11,10 +11,14 @@ func (self parser) parseScriptStatementList() []ast.Statement {
 	})
 }
 
-func (self parser) parseBlockStatementList() []ast.Statement {
-	return self.parseStatementList(func(tkn token.Token) bool {
-		return tkn != token.RIGHT_BRACE && tkn != token.EOF
-	})
+func (self parser) parseBlockStatementList() *ast.BlockStatement {
+	return &ast.BlockStatement{
+		LeftBrace: self.expect(token.LEFT_BRACE),
+		List: self.parseStatementList(func(tkn token.Token) bool {
+			return tkn != token.RIGHT_BRACE && tkn != token.EOF
+		}),
+		RightBrace: self.expect(token.RIGHT_BRACE),
+	}
 }
 
 func (self parser) parseStatementList(endCondition func(token.Token) bool) []ast.Statement {
@@ -97,29 +101,9 @@ func (self parser) parseVariableDeclaration(declarationList *[]*ast.Binding) ast
 }
 
 func (self parser) parseBindingTarget() (target ast.BindingTarget) {
-	self.tokenToBindingId()
-	switch self.token {
-	case token.IDENTIFIER:
-		target = &ast.Identifier{
-			Index: self.index,
-			Name:  self.parsedLiteral,
-		}
-		self.next()
-	case token.LEFT_BRACKET:
-		target = self.parseArrayBindingPattern()
-	case token.LEFT_BRACE:
-		target = self.parseObjectBindingPattern()
-	default:
-		intex := self.expect(token.IDENTIFIER)
-		self.nextStatement()
-		target = &ast.BadExpression{
-			Start: intex,
-			End:   self.index,
-		}
-	}
 	return
 }
 
-func (self parser) parseAssignmentExpression() ast.Expression {
+func (self parser) nextStatement() {
 
 }

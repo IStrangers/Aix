@@ -5,9 +5,6 @@ import (
 	"aix/file"
 	"aix/token"
 	"aix/unistring"
-	"fmt"
-	"io"
-	"io/fs"
 	"os"
 )
 
@@ -42,35 +39,27 @@ func newParser(fileName, script string, baseOffset int) *parser {
 	}
 }
 
-func ParseFileByPath(path string) *ast.Program {
-	fsFile, _ := os.Open(path)
-	return ParseFile(fsFile)
-}
-
-func ParseFile(fsFile fs.File) *ast.Program {
-	defer fsFile.Close()
-	fileInfo, _ := fsFile.Stat()
-	script := make([]byte, fileInfo.Size())
-	_, err := fsFile.Read(script)
-	if err != nil && err != io.EOF {
-		fmt.Println("read buf fail", err)
+func ParseFileByPath(path string) (*ast.Program, error) {
+	script, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
 	}
-	return ParseScript(fileInfo.Name(), string(script))
+	return ParseScript(path, string(script))
 }
 
-func ParseScript(fileName, script string) *ast.Program {
+func ParseScript(fileName, script string) (*ast.Program, error) {
 	parser := newParser(fileName, script, 1)
-	return parser.parseProgram()
+	return parser.parse()
 }
 
 func (self parser) parse() (*ast.Program, error) {
+	defer self.closeScope()
+	self.openScope()
 	program := self.parseProgram()
 	return program, self.errorList.PeekErr()
 }
 
 func (self parser) parseProgram() *ast.Program {
-	defer self.closeScope()
-	self.openScope()
 	program := &ast.Program{
 		Body:            self.parseScriptStatementList(),
 		DeclarationList: self.scope.declarationList,
